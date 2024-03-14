@@ -18,6 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .mount("/", routes![controllers::healt_check])
         .mount("/v1", routes![
             controllers::auth_controller::register,
+            controllers::auth_controller::login
         ])
         .manage(db)
         .launch()
