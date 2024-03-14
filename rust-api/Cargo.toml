@@ -6,6 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+dotenv = "0.15.0"
 rocket = { version = "0.5.0", features = ["secrets", "json"] }
-rocket_db_pools = { version = "0.1.0", features = ["mongodb"] }
 mongodb = "2.8.1"
+chrono = { version = "0.4.31", features = ["serde"] }
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+argon2 = "0.5.2"

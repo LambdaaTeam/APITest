@@ -1,14 +1,20 @@
-use rocket::fairing::AdHoc;
+use mongodb::{
+    Database,
+    Client,
+    bson::doc,
+    options::ClientOptions,
+};
 
-use rocket_db_pools::Database;
-use rocket_db_pools::mongodb;
+pub async fn init() -> Result<Database, mongodb::error::Error> {
+    let mongo_uri = std::env::var("DATABASE_URL").expect("DATABASE_URL is not set in environment variables");
+    let client_options = ClientOptions::parse(mongo_uri).await.unwrap();
 
-#[derive(Database)]
-#[database("mongodb")]
-pub struct DbConn(mongodb::Client);
+    let db = Client::with_options(client_options)
+        .unwrap()
+        .database("rust-api");
 
-pub fn stage() -> AdHoc {
-    AdHoc::on_ignite("Database Stage", |rocket| async {
-        rocket.attach(DbConn::init())
-    })
+    match db.run_command(doc! {"ping": 1}, None).await {
+        Ok(_) => Ok(db),
+        Err(e) => Err(e)
+    }
 }
