@@ -1,6 +1,9 @@
+use axum::http;
+use log::info;
+
 pub mod auth_controller;
 
-#[get("/")]
-pub fn healt_check() -> &'static str {
-    "OK"
+pub async fn health() -> http::StatusCode {
+    info!("Health checked");
+    http::StatusCode::OK
 }

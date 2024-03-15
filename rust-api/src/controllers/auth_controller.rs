@@ -1,25 +1,30 @@
+use axum::{extract, http};
 use mongodb::Database;
-use rocket::{http::Status, State, serde::json::Json};
 
 use crate::{
+    errors::ApiErrorResponse,
     models::user_model::{CreateUser, LoginUser, PublicUser},
-    services
+    services,
 };
 
-#[post("/register", data = "<user>")]
 pub async fn register(
-    db: &State<Database>,
-    user: Json<CreateUser>
-) -> Result<Json<PublicUser>, Status> {
-    let user = services::user_service::create(db, user.into_inner()).await?;
-    Ok(Json(user))
+    extract::State(db): extract::State<Database>,
+    axum::Json(user): axum::Json<CreateUser>,
+) -> Result<
+    (http::StatusCode, axum::Json<PublicUser>),
+    (http::StatusCode, axum::Json<ApiErrorResponse>),
+> {
+    let res = services::user_service::create(&db, user).await?;
+    Ok(res)
 }
 
-#[post("/login", data = "<user>")]
 pub async fn login(
-    db: &State<Database>,
-    user: Json<LoginUser>
-) -> Result<Json<PublicUser>, Status> {
-    let user = services::user_service::login(db, user.into_inner()).await?;
-    Ok(Json(user))
+    extract::State(db): extract::State<Database>,
+    axum::Json(user): axum::Json<LoginUser>,
+) -> Result<
+    (http::StatusCode, axum::Json<PublicUser>),
+    (http::StatusCode, axum::Json<ApiErrorResponse>),
+> {
+    let res = services::user_service::login(&db, user).await?;
+    Ok(res)
 }
