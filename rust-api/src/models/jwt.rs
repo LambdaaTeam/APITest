@@ -10,7 +10,9 @@ impl Claims {
     pub fn new(sub: String) -> Self {
         Self {
             sub,
-            exp: 60 * 60 * 24 * 7, // 7 days
+            exp: chrono::Duration::try_hours(24 * 7)
+                .unwrap()
+                .num_seconds() as usize,
         }
     }
 }

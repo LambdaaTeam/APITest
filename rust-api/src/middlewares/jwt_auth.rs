@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use axum::{
     body::Body,
     extract::{Request, State},
@@ -7,7 +9,7 @@ use axum::{
     Json,
 };
 use jsonwebtoken::DecodingKey;
-use mongodb::{bson::doc, Database};
+use mongodb::{bson::{doc, oid::ObjectId}, Database};
 
 use crate::{
     errors::{ApiError, ApiErrorResponse},
@@ -45,7 +47,7 @@ pub async fn auth(
 
     let user = db
         .collection::<User>("users")
-        .find_one(doc! { "_id": &claims.sub }, None)
+        .find_one(doc! { "_id": ObjectId::from_str(&claims.sub).unwrap() }, None)
         .await
         .map_err(|_| ApiError::InvalidToken.get_response())?;
 
