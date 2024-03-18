@@ -1,30 +1,24 @@
-use axum::{extract, http};
+use axum::{extract::State, http::StatusCode, Json};
 use mongodb::Database;
 
 use crate::{
     errors::ApiErrorResponse,
-    models::user_model::{CreateUser, LoginUser, PublicUser},
+    models::user_model::{CreateUser, LoginUser, PublicUser, PublicUserWithToken},
     services,
 };
 
 pub async fn register(
-    extract::State(db): extract::State<Database>,
-    axum::Json(user): axum::Json<CreateUser>,
-) -> Result<
-    (http::StatusCode, axum::Json<PublicUser>),
-    (http::StatusCode, axum::Json<ApiErrorResponse>),
-> {
+    State(db): State<Database>,
+    Json(user): Json<CreateUser>,
+) -> Result<(StatusCode, Json<PublicUser>), (StatusCode, Json<ApiErrorResponse>)> {
     let res = services::user_service::create(&db, user).await?;
     Ok(res)
 }
 
 pub async fn login(
-    extract::State(db): extract::State<Database>,
-    axum::Json(user): axum::Json<LoginUser>,
-) -> Result<
-    (http::StatusCode, axum::Json<PublicUser>),
-    (http::StatusCode, axum::Json<ApiErrorResponse>),
-> {
-    let res = services::user_service::login(&db, user).await?;
+    State(db): State<Database>,
+    Json(login_user): Json<LoginUser>,
+) -> Result<(StatusCode, Json<PublicUserWithToken>), (StatusCode, Json<ApiErrorResponse>)> {
+    let res = services::user_service::login(&db, login_user).await?;
     Ok(res)
 }

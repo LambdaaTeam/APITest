@@ -1,9 +1,13 @@
 use axum::{http::StatusCode, Json};
+use jsonwebtoken::{EncodingKey, Header};
 use mongodb::{bson::doc, Database};
 
 use crate::{
     errors::{ApiError, ApiErrorResponse},
-    models::user_model::{CreateUser, LoginUser, PublicUser, User},
+    models::{
+        jwt::Claims,
+        user_model::{CreateUser, LoginUser, PublicUser, PublicUserWithToken, User},
+    },
 };
 
 use super::password_service;
@@ -13,7 +17,7 @@ pub async fn create(
     user: CreateUser,
 ) -> Result<(StatusCode, Json<PublicUser>), (StatusCode, Json<ApiErrorResponse>)> {
     let collection = db.collection::<User>("users");
-    let user = User::create(user);
+    let user = User::new(user);
 
     let result = collection.insert_one(user.clone(), None).await;
 
@@ -26,7 +30,7 @@ pub async fn create(
 pub async fn login(
     db: &Database,
     login_user: LoginUser,
-) -> Result<(StatusCode, Json<PublicUser>), (StatusCode, Json<ApiErrorResponse>)> {
+) -> Result<(StatusCode, Json<PublicUserWithToken>), (StatusCode, Json<ApiErrorResponse>)> {
     let collection = db.collection::<User>("users");
 
     let result = collection
@@ -38,7 +42,21 @@ pub async fn login(
             let hash = user.password.bytes.clone();
 
             if password_service::verify_password(&hash, &login_user.password) {
-                Ok((StatusCode::OK, Json(PublicUser::from(user))))
+                let claims = Claims::new(user.id.clone().to_hex());
+                let secret = std::env::var("JWT_SECRET").unwrap_or("secret".to_string());
+
+                let token = jsonwebtoken::encode(
+                    &Header::default(),
+                    &claims,
+                    &EncodingKey::from_secret(secret.as_ref()),
+                );
+
+                let public_user = PublicUserWithToken::new(user, token.unwrap());
+
+                Ok((
+                    StatusCode::OK,
+                    Json(public_user)
+                ))
             } else {
                 Err(ApiError::PasswordNotMatch.get_response())
             }

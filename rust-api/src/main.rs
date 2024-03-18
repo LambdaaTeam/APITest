@@ -6,6 +6,7 @@ use log::info;
 mod controllers;
 mod database;
 mod errors;
+mod middlewares;
 mod models;
 mod router;
 mod services;
@@ -25,7 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Starting server on {}", addr);
     let app = Router::new()
         .route("/", get(controllers::health))
-        .nest("/api/v1", router::create_router())
+        .nest("/api/v1", router::create_router(db.clone()))
         .with_state(db);
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
