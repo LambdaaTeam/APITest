@@ -22,7 +22,7 @@ func Register(createUser models.CreateUser) (*models.PublicUser, error) {
 	return &publicUser, nil
 }
 
-func Login(loginUser models.LoginUser) (*models.PublicUser, error) {
+func Login(loginUser models.LoginUser) (*models.PublicUserWithToken, error) {
 	var user models.User
 	err := pkg.GetCollection("users").FindOne(context.TODO(), bson.M{"email": loginUser.Email}).Decode(&user)
 
@@ -34,7 +34,8 @@ func Login(loginUser models.LoginUser) (*models.PublicUser, error) {
 		return nil, errors.New("invalid password")
 	}
 
-	publicUser := user.PublicUser()
+	token := pkg.GenerateToken(user.ID.Hex())
+	publicUserWithToken := user.PublicUserWithToken(token)
 
-	return &publicUser, nil
+	return &publicUserWithToken, nil
 }

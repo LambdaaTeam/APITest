@@ -2,6 +2,7 @@ package main
 
 import (
 	"go-api/controllers"
+	"go-api/middlewares"
 	"go-api/pkg"
 
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,7 @@ func main() {
 	{
 		v1.POST("/register", controllers.Register)
 		v1.POST("/login", controllers.Login)
-		v1.GET("/me", controllers.Me)
+		v1.GET("/me", middlewares.JwtAuth(), controllers.Me)
 	}
 
 	r.Run()
